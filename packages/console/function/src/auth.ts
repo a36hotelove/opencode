@@ -50,7 +50,7 @@ export default {
         }),
         google: GoogleOidcProvider({
           clientID: Resource.GOOGLE_CLIENT_ID.value,
-          scopes: ["openid", "email"],
+          scopes: ["email", "profile"],
         }),
         //        email: CodeProvider({
         //          async request(req, state, form, error) {
@@ -129,9 +129,12 @@ export default {
           if (!primaryEmail.verified) throw new Error("Primary email for GitHub user not verified")
           email = primaryEmail.email
         } else if (response.provider === "google") {
-          if (!response.id.email_verified) throw new Error("Google email not verified")
-          subject = response.id.sub as string
-          email = response.id.email as string
+          const id = response.id
+          if (!id.email_verified) throw new Error("Google email not verified")
+          if (typeof id.sub !== "string") throw new Error("Missing Google subject")
+          if (typeof id.email !== "string") throw new Error("Missing Google email")
+          subject = id.sub
+          email = id.email
         } else throw new Error("Unsupported provider")
 
         if (!email) throw new Error("No email found")
